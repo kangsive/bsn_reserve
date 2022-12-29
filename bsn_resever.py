@@ -53,7 +53,7 @@ class BsnReserve:
         current_month, current_year, table_tr_list, title_list = self.get_current_month()
 
         # jump to specified month
-        while not self.in_schedule(current_year, self.months.index(current_month)+1, current_day=1):
+        while not self.in_schedule(current_year, self.months.index(current_month)+1):
             title_list[2].find_element(By.TAG_NAME, "a").click()
             current_month, current_year, table_tr_list, title_list = self.get_current_month()
 
@@ -63,8 +63,8 @@ class BsnReserve:
             print("not found")
 
         # 如果当月没有可选日期，跳转到下一个月继续查看
-        while not found and self.in_schedule(current_year, self.months.index(current_month)+2, current_day=1):
-            print("not found")
+        while not found and self.in_schedule(current_year, self.months.index(current_month)+1, current_day=1):
+            print("still not found")
             title_list[2].find_element(By.TAG_NAME, "a").click()
             current_month, current_year, table_tr_list, title_list = self.get_current_month()
             found = self.check_slot(table_tr_list, current_year)
@@ -94,11 +94,11 @@ class BsnReserve:
                 state = day.get_attribute("class")
                 # if this day is enable, process reservation
                 if state=="enabled":
-                    found = True
                     button = day.find_element(By.TAG_NAME,"a")
                     date_str = button.get_attribute("title").split(" ")
                     # check if in schedule
                     if self.in_schedule(current_year, self.months.index(date_str[1])+1, date_str[0]):
+                        found = True
                         # print(date_str)
                         button.click()
 
@@ -111,7 +111,7 @@ class BsnReserve:
 
                         # fill in contact_info and next
                         self.fill_in_info()
-                        # TODO click next and confirm reservation
+                        # TODO click next and finish reservation
                         # self.driver.find_element(By.CSS_SELECTOR, "#ctl00_CntMain_amc_ContantHolder_ssm_ctl00_fAfspraakKeuzeRegistrationEfAutoGen6").click()
 
                         self.success = True
@@ -127,7 +127,14 @@ class BsnReserve:
         # fill in email address
         self.driver.find_element(By.CSS_SELECTOR, "#ctl00_CntMain_amc_ContantHolder_ssm_ctl00_Emailadres").send_keys(self.contact_info["email_address"])
 
-    def in_schedule(self, current_year, current_month, current_day=1):
+    def in_schedule(self, current_year, current_month, current_day=None):
+        # compare only month and year if no day given, this is for reaching specified month
+        if current_day == None:
+            if int(current_year) <= int(self.start_date.year) and int(current_month) < int(self.start_date.month):
+                return False
+            else:
+                return True
+        # compare extract day, this is for selecting time slot
         current_date = datetime.datetime(int(current_year), int(current_month), int(current_day))
         if current_date >= self.start_date and current_date <= self.end_date:
             return True
@@ -141,5 +148,5 @@ if __name__ == "__main__":
         "last_name": "Bing",
         "email_address": "123456789@qq.com",
     }
-    bsn_booker = BsnReserve(start_date="2023-07-01", end_date="2023-08-30", run_ddl="2022-12-29 23:59:59", contact_info=contact_info)
+    bsn_booker = BsnReserve(start_date="2022-12-29", end_date="2023-08-10", run_ddl="2022-12-29 23:59:59", contact_info=contact_info)
     bsn_booker.start()
