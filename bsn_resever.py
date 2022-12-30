@@ -106,7 +106,7 @@ class BsnReserve:
                         time_slots = self.driver.find_element(By.CSS_SELECTOR, "#ctl00_CntMain_amc_ContantHolder_ssm_ctl00_Tijd")
                         select = Select(time_slots)
                         options = time_slots.find_elements(By.TAG_NAME, "option")
-                        select.select_by_index(min(1, len(options)//2))
+                        select.select_by_index(max(1, len(options)//2))
                         self.driver.find_element(By.CSS_SELECTOR, "#ctl00_CntMain_amc_ContantHolder_ssm_ctl00_fAfspraakKeuzeRegistrationEfAutoGen4").click()
 
                         # fill in contact_info and next
@@ -130,10 +130,9 @@ class BsnReserve:
     def in_schedule(self, current_year, current_month, current_day=None):
         # compare only month and year if no day given, this is for reaching specified month
         if current_day == None:
-            if int(current_year) <= int(self.start_date.year) and int(current_month) < int(self.start_date.month):
+            if datetime.datetime(int(current_year), int(current_month), 1) < self.start_date:
                 return False
-            else:
-                return True
+            return True
         # compare extract day, this is for selecting time slot
         current_date = datetime.datetime(int(current_year), int(current_month), int(current_day))
         if current_date >= self.start_date and current_date <= self.end_date:
@@ -148,5 +147,5 @@ if __name__ == "__main__":
         "last_name": "Bing",
         "email_address": "123456789@qq.com",
     }
-    bsn_booker = BsnReserve(start_date="2022-12-29", end_date="2023-08-10", run_ddl="2022-12-29 23:59:59", contact_info=contact_info)
+    bsn_booker = BsnReserve(start_date="2023-07-01", end_date="2023-07-10", run_ddl="2022-12-30 23:59:59", contact_info=contact_info)
     bsn_booker.start()
